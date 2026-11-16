@@ -1,0 +1,831 @@
+{
+    "version": 2,
+    "accounts": {
+        "66243543507": {
+            "name": "Survendra",
+            "age": 22,
+            "email": "survendra697@gmail.com",
+            "account_number": "66243543507",
+            "balance": "1030.0",
+            "failed_attempts": 0,
+            "locked_until": 0,
+            "transactions": [
+                {
+                    "id": "TXN-1794311441301-22",
+                    "type": "DEPOSIT",
+                    "amount": "6",
+                    "balance_after": "1030.0",
+                    "created_at": "2026-11-10T11:50:41.301458+00:00"
+                },
+                {
+                    "id": "CARDTXN-FE4F66DFD13E",
+                    "type": "CARD_PAYMENT",
+                    "merchant": "Domino's",
+                    "category": "Food",
+                    "amount": "100",
+                    "status": "COMPLETED",
+                    "created_at": "2026-11-10T08:56:12.898928+00:00",
+                    "balance_after": "1024.0"
+                },
+                {
+                    "id": "CARDTXN-E241BD3E5144",
+                    "type": "CARD_PAYMENT",
+                    "merchant": "Flipkart",
+                    "category": "Shopping",
+                    "amount": "50",
+                    "status": "COMPLETED",
+                    "created_at": "2026-11-10T08:54:12.349283+00:00",
+                    "balance_after": "1124.0"
+                },
+                {
+                    "id": "CARDTXN-E9E178C1DE70",
+                    "type": "CARD_PAYMENT",
+                    "merchant": "Amazon",
+                    "category": "Shopping",
+                    "amount": "100",
+                    "status": "COMPLETED",
+                    "created_at": "2026-11-10T08:32:37.149135+00:00",
+                    "balance_after": "1174.0"
+                },
+                {
+                    "id": "TXN-1793878055826-18",
+                    "type": "DEPOSIT",
+                    "amount": "234",
+                    "balance_after": "1274.0",
+                    "created_at": "2026-11-05T11:27:35.826720+00:00"
+                },
+                {
+                    "id": "TRF-AD7A2753A3BC",
+                    "type": "TRANSFER",
+                    "amount": "10",
+                    "balance_after": "1040.0",
+                    "created_at": "2026-11-05T07:25:01.431880+00:00",
+                    "reference": "TRF-AD7A2753A3BC",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TXN-1793863083373-16",
+                    "type": "DEPOSIT",
+                    "amount": "4",
+                    "balance_after": "1050.0",
+                    "created_at": "2026-11-05T07:18:03.373716+00:00"
+                },
+                {
+                    "id": "TXN-1793859716430-15",
+                    "type": "WITHDRAW",
+                    "amount": "1",
+                    "balance_after": "1046.0",
+                    "created_at": "2026-11-05T06:21:56.430201+00:00"
+                },
+                {
+                    "id": "TXN-1793859578175-14",
+                    "type": "DEPOSIT",
+                    "amount": "500",
+                    "balance_after": "1047.0",
+                    "created_at": "2026-11-05T06:19:38.175275+00:00"
+                },
+                {
+                    "id": "TRF-0BD9B091F9BE",
+                    "type": "TRANSFER",
+                    "amount": "2",
+                    "balance_after": "547.0",
+                    "created_at": "2026-11-05T06:11:27.750217+00:00",
+                    "reference": "TRF-0BD9B091F9BE",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TRF-0D82D124F5B7",
+                    "type": "TRANSFER",
+                    "amount": "5",
+                    "balance_after": "549.0",
+                    "created_at": "2026-11-05T05:53:47.379635+00:00",
+                    "reference": "TRF-0D82D124F5B7",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TRF-216FC1136B66",
+                    "type": "TRANSFER",
+                    "amount": "10",
+                    "balance_after": "554.0",
+                    "created_at": "2026-11-05T05:47:17.132619+00:00",
+                    "reference": "TRF-216FC1136B66",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TRF-60B929B41A12",
+                    "type": "TRANSFER",
+                    "amount": "5",
+                    "balance_after": "564.0",
+                    "created_at": "2026-11-05T05:44:35.030167+00:00",
+                    "reference": "TRF-60B929B41A12",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TRF-724B822A211D",
+                    "type": "TRANSFER",
+                    "amount": "1",
+                    "balance_after": "569.0",
+                    "created_at": "2026-11-05T05:44:12.462117+00:00",
+                    "reference": "TRF-724B822A211D",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TRF-4F009802550E",
+                    "type": "TRANSFER",
+                    "amount": "500",
+                    "balance_after": "570.0",
+                    "created_at": "2026-11-05T05:41:27.122332+00:00",
+                    "reference": "TRF-4F009802550E",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TRF-E26A90DFD7A0",
+                    "type": "TRANSFER",
+                    "amount": "10",
+                    "balance_after": "1070.0",
+                    "created_at": "2026-11-05T05:39:58.229792+00:00",
+                    "reference": "TRF-E26A90DFD7A0",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TRF-C0A7916F778D",
+                    "type": "TRANSFER",
+                    "amount": "20",
+                    "balance_after": "1080.0",
+                    "created_at": "2026-11-05T05:38:09.068476+00:00",
+                    "reference": "TRF-C0A7916F778D",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TXN-1793798702654-5",
+                    "type": "DEPOSIT",
+                    "amount": "1",
+                    "balance_after": "1100.0",
+                    "created_at": "2026-11-04T13:25:02.654867+00:00"
+                },
+                {
+                    "id": "TXN-1793798681145-4",
+                    "type": "WITHDRAW",
+                    "amount": "200",
+                    "balance_after": "1099.0",
+                    "created_at": "2026-11-04T13:24:41.145547+00:00"
+                },
+                {
+                    "id": "TRF-A6B821BFF2C9",
+                    "type": "TRANSFER",
+                    "amount": "1",
+                    "balance_after": "1299.0",
+                    "created_at": "2026-11-04T13:17:23.620997+00:00",
+                    "reference": "TRF-A6B821BFF2C9",
+                    "description": "Transfer to Himanshu",
+                    "recipient_account": "24365456159"
+                },
+                {
+                    "id": "TXN-1793794383086-2",
+                    "type": "WITHDRAW",
+                    "amount": "200",
+                    "balance_after": "1300.0",
+                    "created_at": "2026-11-04T12:13:03.086126+00:00"
+                },
+                {
+                    "id": "TXN-1793794347681-1",
+                    "type": "DEPOSIT",
+                    "amount": "500",
+                    "balance_after": "1500.0",
+                    "created_at": "2026-11-04T12:12:27.681548+00:00"
+                }
+            ],
+            "beneficiaries": [
+                {
+                    "beneficiary_id": "BEN-D413D15772A0",
+                    "name": "Himanshu",
+                    "account_number": "24365456159",
+                    "created_at": "2026-11-04T13:16:37.604888+00:00"
+                }
+            ],
+            "notifications": [
+                {
+                    "id": "NOTIF-8EE3E4D8C2F6",
+                    "type": "success",
+                    "title": "Card unfrozen",
+                    "message": "Your debit card ending in 5577 is active again.",
+                    "read": false,
+                    "created_at": "2026-11-16T05:25:39.639843+00:00"
+                },
+                {
+                    "id": "NOTIF-373E3025009E",
+                    "type": "warning",
+                    "title": "Card frozen",
+                    "message": "Your debit card ending in 5577 has been frozen.",
+                    "read": false,
+                    "created_at": "2026-11-16T05:25:38.332763+00:00"
+                },
+                {
+                    "id": "NOTIF-97DF163829C3",
+                    "type": "success",
+                    "title": "Card unfrozen",
+                    "message": "Your debit card ending in 5577 is active again.",
+                    "read": true,
+                    "created_at": "2026-11-11T09:41:44.516229+00:00"
+                },
+                {
+                    "id": "NOTIF-5BF605F68F88",
+                    "type": "warning",
+                    "title": "Card frozen",
+                    "message": "Your debit card ending in 5577 has been frozen.",
+                    "read": true,
+                    "created_at": "2026-11-11T09:41:43.269952+00:00"
+                },
+                {
+                    "id": "NOTIF-F77734EF207D",
+                    "type": "SUCCESS",
+                    "title": "Deposit successful",
+                    "message": "Successfully deposited $6.00 into your account.",
+                    "read": true,
+                    "created_at": "2026-11-10T11:50:41.301765+00:00"
+                },
+                {
+                    "id": "NOTIF-03EAC4F74052",
+                    "type": "success",
+                    "title": "Card payment completed",
+                    "message": "$100.00 paid to Domino's using your card ending in 5577.",
+                    "read": true,
+                    "created_at": "2026-11-10T08:56:12.928965+00:00"
+                },
+                {
+                    "id": "NOTIF-062575651852",
+                    "type": "success",
+                    "title": "Card payment completed",
+                    "message": "$50.00 paid to Flipkart using your card ending in 5577.",
+                    "read": true,
+                    "created_at": "2026-11-10T08:54:12.368655+00:00"
+                },
+                {
+                    "id": "NOTIF-990EF2113688",
+                    "type": "success",
+                    "title": "Card payment completed",
+                    "message": "$100.00 paid to Amazon using your card ending in 5577.",
+                    "read": true,
+                    "created_at": "2026-11-10T08:32:37.167908+00:00"
+                },
+                {
+                    "id": "NOTIF-B8FCD8C17FAE",
+                    "type": "error",
+                    "title": "Card payment failed",
+                    "message": "A card payment was declined because the security PIN was incorrect.",
+                    "read": true,
+                    "created_at": "2026-11-10T08:32:29.795412+00:00"
+                },
+                {
+                    "id": "NOTIF-7F94C8569630",
+                    "type": "success",
+                    "title": "Virtual card created",
+                    "message": "Your virtual card ending in 9823 is now active.",
+                    "read": true,
+                    "created_at": "2026-11-10T08:20:54.725893+00:00"
+                },
+                {
+                    "id": "NOTIF-0381DF5865A7",
+                    "type": "success",
+                    "title": "Card unfrozen",
+                    "message": "Your debit card ending in 5577 is active again.",
+                    "read": true,
+                    "created_at": "2026-11-10T08:18:50.553009+00:00"
+                },
+                {
+                    "id": "NOTIF-4A6744ACCE54",
+                    "type": "warning",
+                    "title": "Card frozen",
+                    "message": "Your debit card ending in 5577 has been frozen.",
+                    "read": true,
+                    "created_at": "2026-11-10T08:18:49.578602+00:00"
+                },
+                {
+                    "id": "NOTIF-FE7FE42EC7BB",
+                    "type": "success",
+                    "title": "Card unfrozen",
+                    "message": "Your debit card ending in 5577 is active again.",
+                    "read": true,
+                    "created_at": "2026-11-10T07:45:18.731638+00:00"
+                },
+                {
+                    "id": "NOTIF-8FF29EDF1312",
+                    "type": "warning",
+                    "title": "Card frozen",
+                    "message": "Your debit card ending in 5577 has been frozen.",
+                    "read": true,
+                    "created_at": "2026-11-10T07:45:17.737000+00:00"
+                },
+                {
+                    "id": "NOTIF-7B91F2F82340",
+                    "type": "success",
+                    "title": "Card unfrozen",
+                    "message": "Your debit card ending in 5577 is active again.",
+                    "read": true,
+                    "created_at": "2026-11-10T07:37:46.545851+00:00"
+                },
+                {
+                    "id": "NOTIF-87748E76D69B",
+                    "type": "warning",
+                    "title": "Card frozen",
+                    "message": "Your debit card ending in 5577 has been frozen.",
+                    "read": true,
+                    "created_at": "2026-11-10T07:37:43.946669+00:00"
+                },
+                {
+                    "id": "NOTIF-9C368DA71076",
+                    "type": "info",
+                    "title": "Card limit updated",
+                    "message": "Your card ending in 5577 now has a daily spending limit of $5000.00.",
+                    "read": true,
+                    "created_at": "2026-11-10T06:47:59.905440+00:00"
+                },
+                {
+                    "id": "NOTIF-4116DB783D0D",
+                    "type": "success",
+                    "title": "Card unfrozen",
+                    "message": "Your debit card ending in 5577 is active again.",
+                    "read": true,
+                    "created_at": "2026-11-10T06:42:21.872257+00:00"
+                },
+                {
+                    "id": "NOTIF-2E4A87B7122D",
+                    "type": "warning",
+                    "title": "Card frozen",
+                    "message": "Your debit card ending in 5577 has been frozen.",
+                    "read": true,
+                    "created_at": "2026-11-10T06:42:20.747141+00:00"
+                },
+                {
+                    "id": "NOTIF-9BA3A719391C",
+                    "type": "success",
+                    "title": "Card unfrozen",
+                    "message": "Your debit card ending in 5577 is active again.",
+                    "read": true,
+                    "created_at": "2026-11-10T06:42:19.532201+00:00"
+                },
+                {
+                    "id": "NOTIF-F49582E8B553",
+                    "type": "warning",
+                    "title": "Card frozen",
+                    "message": "Your debit card ending in 5577 has been frozen.",
+                    "read": true,
+                    "created_at": "2026-11-10T06:42:04.895588+00:00"
+                },
+                {
+                    "id": "NOTIF-F5291A124341",
+                    "type": "success",
+                    "title": "Card unfrozen",
+                    "message": "Your debit card ending in 5577 is active again.",
+                    "read": true,
+                    "created_at": "2026-11-10T06:41:59.530329+00:00"
+                },
+                {
+                    "id": "NOTIF-3D30302CA430",
+                    "type": "warning",
+                    "title": "Card frozen",
+                    "message": "Your debit card ending in 5577 has been frozen.",
+                    "read": true,
+                    "created_at": "2026-11-10T06:41:57.801124+00:00"
+                },
+                {
+                    "id": "NOTIF-472913124CB8",
+                    "type": "success",
+                    "title": "Debit card issued",
+                    "message": "Your BlueBank debit card ending in 5577 is now active.",
+                    "read": true,
+                    "created_at": "2026-11-10T06:33:03.795871+00:00"
+                },
+                {
+                    "id": "NOTIF-2AAB7546FE08",
+                    "type": "SUCCESS",
+                    "title": "Deposit successful",
+                    "message": "Successfully deposited $234.00 into your account.",
+                    "read": true,
+                    "created_at": "2026-11-05T11:27:35.827021+00:00"
+                },
+                {
+                    "id": "NOTIF-BBB0AEFA540A",
+                    "type": "SUCCESS",
+                    "title": "Transfer successful",
+                    "message": "$10.00 sent to Himanshu.",
+                    "read": true,
+                    "created_at": "2026-11-05T07:25:01.431919+00:00"
+                },
+                {
+                    "id": "NOTIF-3EBD3DDE571F",
+                    "type": "SUCCESS",
+                    "title": "Deposit successful",
+                    "message": "Successfully deposited $4.00 into your account.",
+                    "read": true,
+                    "created_at": "2026-11-05T07:18:03.373844+00:00"
+                }
+            ],
+            "security_activity": [
+                {
+                    "id": "SEC-8B5302087FE6",
+                    "event": "Two-factor authentication login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T12:06:53.135328+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-AA1E1DE9E155",
+                    "event": "PIN reset",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T12:06:36.077479+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-8E33FE416B60",
+                    "event": "Two-factor authentication login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T11:33:44.631479+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-651AD671A9CE",
+                    "event": "PIN reset",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T11:33:19.678655+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-5D744B2D4B29",
+                    "event": "PIN reset",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T10:38:19.944344+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-C7900DBD2B8D",
+                    "event": "PIN reset",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T10:36:54.023954+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-CD29A8B11050",
+                    "event": "Two-factor authentication login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T10:23:14.663977+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-31CFF2E85F76",
+                    "event": "Two-factor authentication enabled",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T10:21:51.334817+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-0C892B08B352",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T10:19:46.065390+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-BA2CDBDB442E",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T09:40:58.157778+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-07B822D2EFFC",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T09:28:42.353671+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-84FB06D2703B",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T05:27:19.504135+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-3D23565CA7AB",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-16T05:24:54.637309+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-0130F90906FE",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-11T09:28:08.439048+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-4738DE39C911",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-10T11:50:25.586316+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-BE711C48D571",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-10T08:12:38.149820+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-0451D62A0A76",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-10T07:26:10.352780+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-248E9C481BC6",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-10T06:32:34.176128+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-AF1CB007FD11",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-05T12:25:09.413341+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                },
+                {
+                    "id": "SEC-FBAA6BDB2522",
+                    "event": "Login",
+                    "status": "SUCCESS",
+                    "created_at": "2026-11-05T10:40:26.158124+00:00",
+                    "device": "Unknown device",
+                    "browser": "Unknown browser"
+                }
+            ],
+            "cards": [
+                {
+                    "id": "CARD-C2AA496FA694",
+                    "card_type": "DEBIT",
+                    "card_number": "4174584001765577",
+                    "last_four": "5577",
+                    "expiry_month": 11,
+                    "expiry_year": 2031,
+                    "status": "ACTIVE",
+                    "daily_limit": "5000.00",
+                    "issued_at": "2026-11-10T06:33:03.784810+00:00",
+                    "transactions": [
+                        {
+                            "id": "CARDTXN-FE4F66DFD13E",
+                            "type": "CARD_PAYMENT",
+                            "merchant": "Domino's",
+                            "category": "Food",
+                            "amount": "100",
+                            "status": "COMPLETED",
+                            "created_at": "2026-11-10T08:56:12.898928+00:00",
+                            "balance_after": "1024.0"
+                        },
+                        {
+                            "id": "CARDTXN-E241BD3E5144",
+                            "type": "CARD_PAYMENT",
+                            "merchant": "Flipkart",
+                            "category": "Shopping",
+                            "amount": "50",
+                            "status": "COMPLETED",
+                            "created_at": "2026-11-10T08:54:12.349283+00:00",
+                            "balance_after": "1124.0"
+                        },
+                        {
+                            "id": "CARDTXN-E9E178C1DE70",
+                            "type": "CARD_PAYMENT",
+                            "merchant": "Amazon",
+                            "category": "Shopping",
+                            "amount": "100",
+                            "status": "COMPLETED",
+                            "created_at": "2026-11-10T08:32:37.149135+00:00",
+                            "balance_after": "1174.0"
+                        }
+                    ]
+                }
+            ],
+            "virtual_cards": [
+                {
+                    "id": "VCARD-1566C6330892",
+                    "card_type": "VIRTUAL",
+                    "card_number": "4128170702089823",
+                    "last_four": "9823",
+                    "expiry_month": 11,
+                    "expiry_year": 2029,
+                    "status": "ACTIVE",
+                    "daily_limit": "1000.00",
+                    "issued_at": "2026-11-10T08:20:54.715389+00:00",
+                    "transactions": []
+                }
+            ],
+            "two_factor": {
+                "enabled": true,
+                "secret": "JNRWDZ722TDNMWNCQESDYKRCBRAQUTYA"
+            },
+            "pin_salt": "608248ab9f2da924ad75bbd33116bd71",
+            "pin_hash": "d9a28f5dda3a0782e5f268d2b11d2aa94cce75a8dc816b288c4c438c59ee7803"
+        },
+        "24365456159": {
+            "name": "Himanshu",
+            "age": 18,
+            "email": "",
+            "account_number": "24365456159",
+            "balance": "5564.0",
+            "failed_attempts": 0,
+            "locked_until": 0.0,
+            "transactions": [
+                {
+                    "id": "TRF-AD7A2753A3BC",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "10",
+                    "balance_after": "5564.0",
+                    "created_at": "2026-11-05T07:25:01.431880+00:00",
+                    "reference": "TRF-AD7A2753A3BC",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-0BD9B091F9BE",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "2",
+                    "balance_after": "5554.0",
+                    "created_at": "2026-11-05T06:11:27.750217+00:00",
+                    "reference": "TRF-0BD9B091F9BE",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-0D82D124F5B7",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "5",
+                    "balance_after": "5552.0",
+                    "created_at": "2026-11-05T05:53:47.379635+00:00",
+                    "reference": "TRF-0D82D124F5B7",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-216FC1136B66",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "10",
+                    "balance_after": "5547.0",
+                    "created_at": "2026-11-05T05:47:17.132619+00:00",
+                    "reference": "TRF-216FC1136B66",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-60B929B41A12",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "5",
+                    "balance_after": "5537.0",
+                    "created_at": "2026-11-05T05:44:35.030167+00:00",
+                    "reference": "TRF-60B929B41A12",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-724B822A211D",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "1",
+                    "balance_after": "5532.0",
+                    "created_at": "2026-11-05T05:44:12.462117+00:00",
+                    "reference": "TRF-724B822A211D",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-4F009802550E",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "500",
+                    "balance_after": "5531.0",
+                    "created_at": "2026-11-05T05:41:27.122332+00:00",
+                    "reference": "TRF-4F009802550E",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-E26A90DFD7A0",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "10",
+                    "balance_after": "5031.0",
+                    "created_at": "2026-11-05T05:39:58.229792+00:00",
+                    "reference": "TRF-E26A90DFD7A0",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-C0A7916F778D",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "20",
+                    "balance_after": "5021.0",
+                    "created_at": "2026-11-05T05:38:09.068476+00:00",
+                    "reference": "TRF-C0A7916F778D",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                },
+                {
+                    "id": "TRF-A6B821BFF2C9",
+                    "type": "TRANSFER_RECEIVED",
+                    "amount": "1",
+                    "balance_after": "5001.0",
+                    "created_at": "2026-11-04T13:17:23.620997+00:00",
+                    "reference": "TRF-A6B821BFF2C9",
+                    "description": "Transfer from Survendra",
+                    "sender_account": "66243543507"
+                }
+            ],
+            "beneficiaries": [],
+            "notifications": [
+                {
+                    "id": "NOTIF-2498ABE37069",
+                    "type": "SUCCESS",
+                    "title": "Money received",
+                    "message": "You received $10.00 from Survendra.",
+                    "read": false,
+                    "created_at": "2026-11-05T07:25:01.431933+00:00"
+                }
+            ],
+            "security_activity": [],
+            "cards": [],
+            "virtual_cards": [],
+            "two_factor": {
+                "enabled": false,
+                "secret": null
+            }
+        },
+        "42065847299": {
+            "name": "Suresh",
+            "age": 20,
+            "email": "",
+            "account_number": "42065847299",
+            "balance": "95.0",
+            "failed_attempts": 0,
+            "locked_until": 0.0,
+            "transactions": [],
+            "beneficiaries": [],
+            "notifications": [],
+            "security_activity": [],
+            "cards": [],
+            "virtual_cards": [],
+            "two_factor": {
+                "enabled": false,
+                "secret": null
+            }
+        },
+        "87335524495": {
+            "name": "Manish",
+            "age": 21,
+            "email": "",
+            "account_number": "87335524495",
+            "balance": "500.00",
+            "failed_attempts": 0,
+            "locked_until": 0.0,
+            "transactions": [],
+            "beneficiaries": [],
+            "notifications": [],
+            "security_activity": [],
+            "cards": [],
+            "virtual_cards": [],
+            "two_factor": {
+                "enabled": false,
+                "secret": null
+            },
+            "pin_salt": "5289b82698f35a7174a1c7cb53747ace",
+            "pin_hash": "00cc03fa6834b84a2a7a8ee240e01e3bff7942cfd7a8cdb35498c3c5992e6245"
+        }
+    }
+}
