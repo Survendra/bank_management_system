@@ -9,8 +9,36 @@ import hmac
 import hashlib
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+from pymongo import MongoClient
 
-ACCOUNT_FILE = os.path.join(os.path.dirname(__file__), "bank_data.json")
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGO_URI")
+
+if not MONGO_URI:
+    raise RuntimeError("MONGO_URI is not configured.")
+
+mongo_client = MongoClient(
+    MONGO_URI,
+    serverSelectionTimeoutMS=5000,
+)
+
+mongo_db = mongo_client["bluebank"]
+
+accounts_collection = mongo_db["accounts"]
+transactions_collection = mongo_db["transactions"]
+beneficiaries_collection = mongo_db["beneficiaries"]
+cards_collection = mongo_db["cards"]
+security_events_collection = mongo_db["security_events"]
+notifications_collection = mongo_db["notifications"]
+
+accounts_collection.create_index(
+    [("account_number", 1)],
+    unique=True
+)
+
+
 MAX_PIN_ATTEMPTS = 3
 LOCK_DURATION = 60
 PIN_ITERATIONS = 600000
@@ -86,48 +114,42 @@ def parse_amount(raw):
 def save_data():
     global storage_ready
 
-    if not storage_ready:
-        return False
-
-    data = {
-        "version": 2,
-        "accounts": {},
-    }
-
-    for account_number, account in accounts.items():
-        record = account.copy()
-        record["balance"] = str(account["balance"])
-        data["accounts"][account_number] = record
-
-    temp_path = None
-
     try:
-        directory = os.path.dirname(os.path.abspath(ACCOUNT_FILE))
+        for account_number, account in accounts.items():
+            document = dict(account)
 
-        fd, temp_path = tempfile.mkstemp(
-            prefix=".bank_data_",
-            suffix=".tmp",
-            dir=directory,
+            # MongoDB should store the account number as a field
+            document["account_number"] = account_number
+
+            # Remove any MongoDB-generated ID if present
+            document.pop("_id", None)
+
+            # Store Decimal balance safely as a string
+            if isinstance(document.get("balance"), Decimal):
+                document["balance"] = str(document["balance"])
+
+            accounts_collection.update_one(
+                {"account_number": account_number},
+                {"$set": document},
+                upsert=True,
+            )
+
+        storage_ready = True
+
+        print(
+            f"Saved {len(accounts)} accounts to MongoDB."
         )
-
-        with os.fdopen(fd, "w", encoding="utf-8") as file:
-            json.dump(data, file, indent=4)
-            file.flush()
-            os.fsync(file.fileno())
-
-        os.replace(temp_path, ACCOUNT_FILE)
 
         return True
 
-    except (OSError, TypeError, ValueError):
+    except Exception as exc:
+        storage_ready = False
 
-        if temp_path and os.path.exists(temp_path):
-            try:
-                os.remove(temp_path)
-            except OSError:
-                pass
-
-        return False
+        print(
+            f"MongoDB save error: "
+            f"{type(exc).__name__}: {exc}"
+        )
+        raise
 
 
 def load_data():
@@ -135,159 +157,85 @@ def load_data():
 
     accounts = {}
 
-    if not os.path.exists(ACCOUNT_FILE):
-        storage_ready = True
-        return
-
     try:
-        with open(ACCOUNT_FILE, "r", encoding="utf-8") as file:
-            data = json.load(file)
-
-        if not isinstance(data, dict):
-            raise ValueError("Invalid JSON structure.")
-
-        loaded = data.get("accounts")
-
-        if loaded is None and "account_number" in data:
-            loaded = {
-                str(data["account_number"]): data
-            }
-
-        if not isinstance(loaded, dict):
-            raise ValueError("Unknown account data format.")
-
         valid = {}
 
-        for account_number, item in loaded.items():
+        for item in accounts_collection.find({}):
+            account_number = str(
+                item.get("account_number", "")
+            ).strip()
+
+            if not re.fullmatch(
+                r"[0-9]{11}",
+                account_number,
+            ):
+                print(
+                    f"REJECTED {account_number}: invalid account number"
+                )
+                continue
+
+            if not isinstance(item, dict):
+                continue
+
+            record = dict(item)
+            record.pop("_id", None)
+
+            record["account_number"] = account_number
 
             try:
-                account_number = str(account_number)
-
-                if (
-                    not re.fullmatch(
-                        r"[0-9]{11}",
-                        account_number,
-                    )
-                    or not isinstance(item, dict)
-                ):
-                    print(f"REJECTED {account_number}: invalid account number or data")
-                    continue
-
-                name = item["name"]
-                age = item["age"]
-
-                balance_value = Decimal(
-                    str(item["balance"])
+                record["balance"] = Decimal(
+                    str(record.get("balance", "0"))
                 )
 
-                if not is_valid_name(name):
-                    print(f"REJECTED {account_number}: invalid name = {name!r}")
+                if not record["balance"].is_finite():
                     continue
 
-                if (
-                    isinstance(age, bool)
-                    or not isinstance(age, int)
-                    or not 18 <= age <= 120
-                ):
-                    print(f"REJECTED {account_number}: invalid age = {age!r}")
+                if record["balance"] < 0:
                     continue
 
-                if (
-                    not balance_value.is_finite()
-                    or balance_value < 0
-                ):
-                    print(
-                        f"REJECTED {account_number}: invalid balance = {balance_value!r}"
-                    )
+                record["age"] = int(record.get("age", 0))
+
+                if not 18 <= record["age"] <= 120:
                     continue
 
-                # Email was not present in older accounts.
-                # Those accounts will automatically use an empty email.
-                email = str(
-                    item.get("email", "")
+                record["name"] = str(
+                    record.get("name", "")
                 ).strip()
 
-                record = {
-                    "name": name,
-                    "age": age,
-                    "email": email,
-                    "account_number": account_number,
-                    "balance": balance_value,
-                    "failed_attempts": item.get(
-                        "failed_attempts",
-                        0,
-                    ),
-                    "locked_until": float(
-                        item.get("locked_until", 0)
-                    ),
-                    "transactions": item.get(
-                        "transactions",
-                        [],
-                    ),
-                    "beneficiaries": item.get(
-                        "beneficiaries",
-                        [],
-                    ),
-                    "notifications": item.get(
-                        "notifications",
-                        [],
-                    ),
-                    "security_activity": item.get(
-                        "security_activity",
-                        [],
-                    ),
-                    "cards": item.get(
-                        "cards",
-                        [],
-                    ),
-                    "virtual_cards": item.get(
-                        "virtual_cards",
-                        [],
-                    ),
-                    "two_factor": item.get(
-                        "two_factor",
-                        {
-                            "enabled": False,
-                            "secret": None,
-                        },
-                    ),
-                }
+                record["email"] = str(
+                    record.get("email", "")
+                ).strip()
 
-                if not isinstance(
-                    record["beneficiaries"],
-                    list,
-                ):
-                    record["beneficiaries"] = []
+                if not is_valid_name(record["name"]):
+                    continue
 
-                if not isinstance(
-                    record["transactions"],
-                    list,
-                ):
-                    record["transactions"] = []
+                record["failed_attempts"] = int(
+                    record.get("failed_attempts", 0)
+                )
 
-                if not isinstance(
-                    record["notifications"],
-                    list,
-                ):
-                    record["notifications"] = []
+                record["locked_until"] = float(
+                    record.get("locked_until", 0)
+                )
 
-                if not isinstance(
-                    record["security_activity"],
-                    list,
-                ):
-                    record["security_activity"] = []
+                if record["failed_attempts"] < 0:
+                    record["failed_attempts"] = 0
 
-                if not isinstance(
-                    record["cards"],
-                    list,
-                ):
-                    record["cards"] = []
+                if record["failed_attempts"] > MAX_PIN_ATTEMPTS:
+                    record["failed_attempts"] = MAX_PIN_ATTEMPTS
 
-                if not isinstance(
-                    record["virtual_cards"],
-                    list,
-                ):
-                    record["virtual_cards"] = []
+                if record["locked_until"] < 0:
+                    record["locked_until"] = 0
+
+                for field in [
+                    "transactions",
+                    "beneficiaries",
+                    "notifications",
+                    "security_activity",
+                    "cards",
+                    "virtual_cards",
+                ]:
+                    if not isinstance(record.get(field), list):
+                        record[field] = []
 
                 if not isinstance(
                     record.get("two_factor"),
@@ -305,7 +253,8 @@ def load_data():
                     record["two_factor"]["enabled"] = False
 
                 if (
-                    record["two_factor"].get("secret") is not None
+                    record["two_factor"].get("secret")
+                    is not None
                     and not isinstance(
                         record["two_factor"].get("secret"),
                         str,
@@ -313,20 +262,23 @@ def load_data():
                 ):
                     record["two_factor"]["secret"] = None
 
-                salt = item.get("pin_salt")
-                pin_hash = item.get("pin_hash")
+                salt = record.get("pin_salt")
+                pin_hash = record.get("pin_hash")
 
                 if (salt is None) != (pin_hash is None):
-                    print(f"PIN FIELD MISMATCH: {account_number}")
+                    print(
+                        f"PIN FIELD MISMATCH: {account_number}"
+                    )
                     continue
 
                 if salt is not None:
-
                     if not re.fullmatch(
                         r"[0-9a-f]{32}",
                         str(salt),
                     ):
-                        print(f"INVALID PIN SALT: {account_number} | {salt}")
+                        print(
+                            f"INVALID PIN SALT: {account_number}"
+                        )
                         continue
 
                     if not re.fullmatch(
@@ -334,44 +286,13 @@ def load_data():
                         str(pin_hash),
                     ):
                         print(
-                            f"INVALID PIN HASH: {account_number} | "
-                            f"type={type(pin_hash).__name__} | "
-                            f"length={len(str(pin_hash))}"
+                            f"INVALID PIN HASH: {account_number}"
                         )
                         continue
-
-                    record["pin_salt"] = salt
-                    record["pin_hash"] = pin_hash
-
-                attempts = record["failed_attempts"]
-
-                if (
-                    isinstance(attempts, bool)
-                    or not isinstance(attempts, int)
-                    or attempts < 0
-                ):
-                    continue
-
-                if (
-                    not math.isfinite(
-                        record["locked_until"]
-                    )
-                    or record["locked_until"] < 0
-                ):
-                    continue
-
-                if (
-                    0 < record["locked_until"] <= time.time()
-                ):
-                    record["failed_attempts"] = 0
-                    record["locked_until"] = 0
-                elif attempts > MAX_PIN_ATTEMPTS:
-                    record["failed_attempts"] = MAX_PIN_ATTEMPTS
 
                 valid[account_number] = record
 
             except (
-                KeyError,
                 TypeError,
                 ValueError,
                 InvalidOperation,
@@ -385,20 +306,18 @@ def load_data():
         accounts = valid
         storage_ready = True
 
-        if (
-            "account_number" in data
-            and "accounts" not in data
-        ):
-            save_data()
+        print(
+            "Loaded accounts from MongoDB:",
+            list(accounts.keys()),
+        )
 
-    except (
-        OSError,
-        json.JSONDecodeError,
-        TypeError,
-        ValueError,
-    ):
-        storage_ready = False
+    except Exception as exc:
+        print(
+            f"MongoDB load error: "
+            f"{type(exc).__name__}: {exc}"
+        )
         accounts = {}
+        storage_ready = False
 
 
 def generate_account_number():
