@@ -112,7 +112,7 @@ export default function Transaction({ type }) {
 
           <p className="muted">
             Enter the amount below. Amounts support up to two decimal
-            places.
+            places and cannot exceed 500 crore per transaction.
           </p>
 
           <form className="form" onSubmit={handleSubmit}>
@@ -127,6 +127,7 @@ export default function Transaction({ type }) {
                 id="amount"
                 type="number"
                 min="0.01"
+                max="5000000000"
                 step="0.01"
                 placeholder="0.00"
                 value={amount}

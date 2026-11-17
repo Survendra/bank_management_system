@@ -38,6 +38,7 @@ bank.load_data()
 # Session security
 INACTIVITY_TIMEOUT = 15 * 60       # 15 minutes
 ABSOLUTE_SESSION_TIMEOUT = 8 * 60 * 60  # 8 hours
+MAX_TRANSACTION_AMOUNT = Decimal("5000000000.00")
 
 def error(message, status=400):
     return jsonify({
@@ -1712,6 +1713,11 @@ def deposit():
             "with up to 2 decimal places."
         )
 
+    if amount > MAX_TRANSACTION_AMOUNT:
+        return error(
+            "Transaction amount cannot exceed 500 crore."
+        )
+
     old_balance = account["balance"]
     old_transactions = list(
         account.get("transactions", [])
@@ -1771,6 +1777,11 @@ def withdraw():
         return error(
             "Enter an amount greater than zero "
             "with up to 2 decimal places."
+        )
+
+    if amount > MAX_TRANSACTION_AMOUNT:
+        return error(
+            "Transaction amount cannot exceed 500 crore."
         )
 
     if amount > account["balance"]:
@@ -2171,6 +2182,11 @@ def transfer_funds():
     if amount is None or amount <= 0:
         return error(
             "Enter a valid transfer amount."
+        )
+
+    if amount > MAX_TRANSACTION_AMOUNT:
+        return error(
+            "Transaction amount cannot exceed 500 crore."
         )
 
     if (

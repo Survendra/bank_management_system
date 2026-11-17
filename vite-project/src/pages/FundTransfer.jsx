@@ -423,9 +423,13 @@ export default function FundTransfer() {
                   onChange={handleChange}
                   placeholder="0.00"
                   min="0.01"
+                  max="5000000000"
                   step="0.01"
                   required
                 />
+                <p className="muted">
+                  Maximum transfer: 500 crore per transaction.
+                </p>
               </div>
 
               <div className="form-group">
