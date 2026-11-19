@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+**/__pycache__/
+*.py[cod]
+backend/venv/
+backend/bank_data.json
+vite-project/node_modules/
+vite-project/dist/

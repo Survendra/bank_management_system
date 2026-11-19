@@ -8,3 +8,4 @@ backend/bank_data.json
 vite-project/node_modules/
 vite-project/dist/
 vite-project/.vercel/
+*.pem
