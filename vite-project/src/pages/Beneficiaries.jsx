@@ -5,7 +5,7 @@ import {
   updateBeneficiary,
   deleteBeneficiary,
 } from "../services/api";
-import { useToast } from "../components/Toast";
+import { useToast } from "../components/useToast";
 import ConfirmModal from "../components/ConfirmModal";
 
 export default function Beneficiaries() {
@@ -48,7 +48,34 @@ export default function Beneficiaries() {
   }
 
   useEffect(() => {
-    loadBeneficiaries();
+    let active = true;
+
+    async function load() {
+      try {
+        const response = await getBeneficiaries();
+        if (active) {
+          setBeneficiaries(response.data.beneficiaries || []);
+          setError("");
+        }
+      } catch (err) {
+        if (active) {
+          const errorMessage =
+            err.response?.data?.message ||
+            "Unable to load beneficiaries.";
+          setError(errorMessage);
+          showToast(errorMessage, "error");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+    return () => {
+      active = false;
+    };
   }, [showToast]);
 
   function handleChange(e) {

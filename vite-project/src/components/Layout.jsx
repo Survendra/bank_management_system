@@ -5,7 +5,8 @@ import api, {
   markAllNotificationsRead,
   markNotificationRead,
 } from "../services/api";
-import { useToast } from "./Toast";
+import { useToast } from "./useToast";
+import ThemeToggle from "./ThemeToggle";
 
 import {
   startSessionManager,
@@ -24,15 +25,19 @@ export default function Layout() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationLoading, setNotificationLoading] =
     useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
 
   const notificationRef = useRef(null);
+  const profileRef = useRef(null);
+  const sessionManagerRef = useRef(null);
 
   const account = JSON.parse(
     sessionStorage.getItem("bankAccount") || "{}"
   );
 
   useEffect(() => {
-    const manager = startSessionManager({
+    sessionManagerRef.current = startSessionManager({
       onWarning: () => {
         setSessionWarning(true);
       },
@@ -50,31 +55,38 @@ export default function Layout() {
 
     return () => {
       stopSessionManager();
+      sessionManagerRef.current = null;
     };
   }, [navigate]);
-
-  async function loadNotifications() {
-    try {
-      const data = await getNotifications();
-
-      setNotifications(data.notifications || []);
-      setUnreadCount(data.unread_count || 0);
-    } catch (error) {
-      console.error("Failed to load notifications:", error);
-    }
-  }
 
   // Load notifications when layout opens
   // and refresh every 30 seconds.
   useEffect(() => {
-    loadNotifications();
+    let active = true;
+    function refreshNotifications() {
+      getNotifications()
+        .then((data) => {
+          if (active) {
+            setNotifications(data.notifications || []);
+            setUnreadCount(data.unread_count || 0);
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to load notifications:", error);
+        });
+    }
+
+    refreshNotifications();
 
     const interval = setInterval(
-      loadNotifications,
+      refreshNotifications,
       30000
     );
 
-    return () => clearInterval(interval);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   // Close notification dropdown when clicking outside.
@@ -86,18 +98,35 @@ export default function Layout() {
       ) {
         setNotificationOpen(false);
       }
+
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target)
+      ) {
+        setProfileOpen(false);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setNotificationOpen(false);
+        setProfileOpen(false);
+        setMobileNavigationOpen(false);
+      }
     }
 
     document.addEventListener(
       "mousedown",
       handleOutsideClick
     );
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
       document.removeEventListener(
         "mousedown",
         handleOutsideClick
       );
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
@@ -164,6 +193,8 @@ export default function Layout() {
   }
 
   async function handleLogout() {
+    setMobileNavigationOpen(false);
+    setProfileOpen(false);
     setLoggingOut(true);
 
     try {
@@ -226,7 +257,19 @@ export default function Layout() {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      {mobileNavigationOpen && (
+        <button
+          type="button"
+          className="sidebar-backdrop"
+          aria-label="Close navigation"
+          onClick={() => setMobileNavigationOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`sidebar${mobileNavigationOpen ? " sidebar-open" : ""}`}
+        id="primary-navigation"
+      >
         <div className="sidebar-brand">
           <span className="brand-mark small">B</span>
           <span>BlueBank</span>
@@ -234,7 +277,11 @@ export default function Layout() {
 
         <p className="nav-caption">MENU</p>
 
-        <nav className="side-nav">
+        <nav
+          className="side-nav"
+          aria-label="Main navigation"
+          onClick={() => setMobileNavigationOpen(false)}
+        >
           <NavLink to="/dashboard">
             <span>▦</span> Overview
           </NavLink>
@@ -249,6 +296,18 @@ export default function Layout() {
 
           <NavLink to="/transactions">
             <span>↔</span> Transactions
+          </NavLink>
+
+          <NavLink to="/scheduled-transfers">
+            <span>◷</span> Scheduled transfers
+          </NavLink>
+
+          <NavLink to="/insights">
+            <span>◌</span> Spending &amp; savings
+          </NavLink>
+
+          <NavLink to="/disputes">
+            <span>!</span> Disputes
           </NavLink>
 
           {/* New navigation links */}
@@ -314,18 +373,39 @@ export default function Layout() {
 
       <main className="main-area">
         <header className="topbar">
-          <div>
-            <span className="topbar-kicker">
-              PERSONAL BANKING
-            </span>
+          <div className="topbar-heading">
+            <button
+              type="button"
+              className="mobile-menu-toggle"
+              aria-label={
+                mobileNavigationOpen
+                  ? "Close navigation menu"
+                  : "Open navigation menu"
+              }
+              aria-expanded={mobileNavigationOpen}
+              aria-controls="primary-navigation"
+              onClick={() =>
+                setMobileNavigationOpen((previous) => !previous)
+              }
+            >
+              <span aria-hidden="true">☰</span>
+            </button>
 
-            <strong>
-              Welcome, {account.name || "there"}
-            </strong>
+            <div className="topbar-copy">
+              <span className="topbar-kicker">
+                PERSONAL BANKING
+              </span>
+
+              <strong>
+                Welcome, {account.name || "there"}
+              </strong>
+            </div>
           </div>
 
           {/* Existing avatar + notification */}
           <div className="topbar-right">
+            <ThemeToggle />
+
             <div
               className="notification-wrapper"
               ref={notificationRef}
@@ -334,10 +414,13 @@ export default function Layout() {
                 type="button"
                 className="notification-button"
                 aria-label="Notifications"
+                aria-expanded={notificationOpen}
+                aria-controls="notification-menu"
                 onClick={() =>
-                  setNotificationOpen(
-                    (prev) => !prev
-                  )
+                  {
+                    setProfileOpen(false);
+                    setNotificationOpen((prev) => !prev);
+                  }
                 }
               >
                 {/* Realistic bell icon */}
@@ -364,7 +447,10 @@ export default function Layout() {
               </button>
 
               {notificationOpen && (
-                <div className="notification-dropdown">
+                <div
+                  className="notification-dropdown"
+                  id="notification-menu"
+                >
                   <div className="notification-header">
                     <div>
                       <strong>
@@ -478,10 +564,59 @@ export default function Layout() {
               )}
             </div>
 
-            <div className="topbar-avatar">
-              {(account.name || "U")
-                .charAt(0)
-                .toUpperCase()}
+            <div className="profile-menu-wrapper" ref={profileRef}>
+              <button
+                type="button"
+                className="topbar-avatar profile-trigger"
+                aria-label="Open account menu"
+                aria-expanded={profileOpen}
+                aria-controls="profile-menu"
+                onClick={() => {
+                  setNotificationOpen(false);
+                  setProfileOpen((previous) => !previous);
+                }}
+              >
+                {(account.name || "U").charAt(0).toUpperCase()}
+              </button>
+
+              {profileOpen && (
+                <div className="profile-dropdown" id="profile-menu">
+                  <div className="profile-dropdown-summary">
+                    <span className="profile-dropdown-avatar">
+                      {(account.name || "U").charAt(0).toUpperCase()}
+                    </span>
+                    <div>
+                      <strong>{account.name || "Account holder"}</strong>
+                      <span>{account.email || "BlueBank customer"}</span>
+                    </div>
+                  </div>
+
+                  <nav className="profile-dropdown-links" aria-label="Account shortcuts">
+                    <NavLink to="/profile" onClick={() => setProfileOpen(false)}>
+                      <span aria-hidden="true">◉</span>
+                      Profile &amp; settings
+                    </NavLink>
+                    <NavLink to="/account" onClick={() => setProfileOpen(false)}>
+                      <span aria-hidden="true">▤</span>
+                      Account details
+                    </NavLink>
+                    <NavLink to="/change-pin" onClick={() => setProfileOpen(false)}>
+                      <span aria-hidden="true">⌑</span>
+                      Security &amp; PIN
+                    </NavLink>
+                  </nav>
+
+                  <button
+                    type="button"
+                    className="profile-dropdown-logout"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                  >
+                    <span aria-hidden="true">↪</span>
+                    {loggingOut ? "Signing out..." : "Log out"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

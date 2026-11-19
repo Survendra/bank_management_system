@@ -1,6 +1,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
+import { useToast } from "../components/useToast";
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -11,6 +12,10 @@ export default function Transactions() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [disputeIssue, setDisputeIssue] = useState("UNRECOGNIZED");
+  const [disputeNotes, setDisputeNotes] = useState("");
+  const [disputeSaving, setDisputeSaving] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     api.get("/transactions")
@@ -68,6 +73,26 @@ export default function Transactions() {
           status: "RECEIVED",
         };
 
+      case "SCHEDULED_TRANSFER":
+        return {
+          label: "Scheduled transfer",
+          title: "Scheduled transfer",
+          icon: "◷",
+          category: "debit",
+          sign: "−",
+          status: item.status || "PENDING",
+        };
+
+      case "CARD_PAYMENT":
+        return {
+          label: item.merchant || "Card payment",
+          title: "Card payment",
+          icon: "▣",
+          category: "debit",
+          sign: "−",
+          status: item.status || "COMPLETED",
+        };
+
       default:
         return {
           label: item.type || "Transaction",
@@ -75,7 +100,7 @@ export default function Transactions() {
           icon: "↔",
           category: "debit",
           sign: "",
-          status: "COMPLETED",
+          status: item.status || "COMPLETED",
         };
     }
   }
@@ -129,6 +154,75 @@ export default function Transactions() {
     setType("ALL");
     setFromDate("");
     setToDate("");
+  }
+
+  function openTransactionDetails(transaction) {
+    setDisputeIssue("UNRECOGNIZED");
+    setDisputeNotes("");
+    setSelectedTransaction(transaction);
+  }
+
+  function closeTransactionDetails() {
+    if (disputeSaving) {
+      return;
+    }
+
+    setSelectedTransaction(null);
+    setDisputeIssue("UNRECOGNIZED");
+    setDisputeNotes("");
+  }
+
+  async function submitDispute() {
+    if (!selectedTransaction) {
+      return;
+    }
+    setDisputeSaving(true);
+    try {
+      const response = await api.post(
+        `/transactions/${selectedTransaction.id}/dispute`,
+        { issue: disputeIssue, notes: disputeNotes }
+      );
+      const updated = {
+        ...selectedTransaction,
+        dispute_id: response.data.dispute.id,
+      };
+      setSelectedTransaction(updated);
+      setTransactions((current) =>
+        current.map((item) => item.id === updated.id ? updated : item)
+      );
+      setDisputeNotes("");
+      showToast("Your transaction dispute was submitted.", "success");
+    } catch (requestError) {
+      showToast(
+        requestError.response?.data?.message || "Could not submit this dispute.",
+        "error"
+      );
+    } finally {
+      setDisputeSaving(false);
+    }
+  }
+
+  async function updateCategory(category) {
+    if (!selectedTransaction) {
+      return;
+    }
+    try {
+      const response = await api.patch(
+        `/transactions/${selectedTransaction.id}/category`,
+        { category }
+      );
+      const updated = response.data.transaction;
+      setSelectedTransaction(updated);
+      setTransactions((current) =>
+        current.map((item) => item.id === updated.id ? updated : item)
+      );
+      showToast("Transaction category updated.", "success");
+    } catch (requestError) {
+      showToast(
+        requestError.response?.data?.message || "Could not update the category.",
+        "error"
+      );
+    }
   }
 
   const selectedInfo = selectedTransaction
@@ -248,6 +342,7 @@ export default function Transactions() {
                   <th>TRANSACTION</th>
                   <th>DATE & TIME</th>
                   <th>AMOUNT</th>
+                  <th>STATUS</th>
                   <th>BALANCE AFTER</th>
                 </tr>
               </thead>
@@ -264,11 +359,11 @@ export default function Transactions() {
                       tabIndex={0}
                       role="button"
                       aria-label={`View ${info.label} transaction ${item.id}`}
-                      onClick={() => setSelectedTransaction(item)}
+                      onClick={() => openTransactionDetails(item)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          setSelectedTransaction(item);
+                          openTransactionDetails(item);
                         }
                       }}
                     >
@@ -304,6 +399,12 @@ export default function Transactions() {
                         </strong>
                       </td>
 
+                      <td>
+                        <span className={`feature-status status-${String(item.status || "COMPLETED").toLowerCase()}`}>
+                          {String(item.status || "COMPLETED").replaceAll("_", " ")}
+                        </span>
+                      </td>
+
                       <td className="balance-cell">
                         ${formatAmount(item.balance_after)}
                       </td>
@@ -322,7 +423,7 @@ export default function Transactions() {
           className="transaction-modal-backdrop"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) {
-              setSelectedTransaction(null);
+              closeTransactionDetails();
             }
           }}
           role="presentation"
@@ -337,7 +438,8 @@ export default function Transactions() {
               className="modal-close"
               type="button"
               aria-label="Close transaction details"
-              onClick={() => setSelectedTransaction(null)}
+              onClick={closeTransactionDetails}
+              disabled={disputeSaving}
             >
               ×
             </button>
@@ -358,7 +460,7 @@ export default function Transactions() {
             </p>
 
             <span className={`detail-type-pill ${selectedInfo.category}`}>
-              {selectedInfo.status}
+              {String(selectedTransaction.status || "COMPLETED").replaceAll("_", " ")}
             </span>
 
             <div className="detail-divider"></div>
@@ -425,14 +527,67 @@ export default function Transactions() {
 
               <div>
                 <span>Status</span>
-                <strong className="status-complete">Completed</strong>
+                <strong className="status-complete">
+                  {String(selectedTransaction.status || "COMPLETED").replaceAll("_", " ")}
+                </strong>
               </div>
             </div>
+
+            <label className="transaction-category-control">
+              Spending category
+              <select
+                value={selectedTransaction.category || "Other"}
+                onChange={(event) => updateCategory(event.target.value)}
+              >
+                {["Bills", "Education", "Entertainment", "Food", "Health", "Shopping", "Transport", "Travel", "Other"].map((category) => (
+                  <option key={category}>{category}</option>
+                ))}
+              </select>
+            </label>
+
+            {selectedTransaction.dispute_id ? (
+              <a className="view-all-link dispute-track-link" href="/disputes">
+                Track your dispute
+              </a>
+            ) : selectedTransaction.status === "COMPLETED" || !selectedTransaction.status ? (
+              <div className="dispute-form">
+                <strong>Something wrong with this transaction?</strong>
+                <label>
+                  Reason
+                  <select
+                    value={disputeIssue}
+                    onChange={(event) => setDisputeIssue(event.target.value)}
+                  >
+                    <option value="UNRECOGNIZED">I do not recognize this transaction</option>
+                    <option value="DUPLICATE">Duplicate transaction</option>
+                    <option value="INCORRECT_AMOUNT">Incorrect amount</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </label>
+                <label>
+                  Notes (optional)
+                  <textarea
+                    maxLength={500}
+                    value={disputeNotes}
+                    onChange={(event) => setDisputeNotes(event.target.value)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  disabled={disputeSaving}
+                  onClick={submitDispute}
+                >
+                  {disputeSaving ? "Submitting..." : "Report a problem"}
+                </button>
+              </div>
+            ) : null}
 
             <button
               className="primary-button detail-done"
               type="button"
-              onClick={() => setSelectedTransaction(null)}
+              onClick={closeTransactionDetails}
+              disabled={disputeSaving}
             >
               Done
             </button>

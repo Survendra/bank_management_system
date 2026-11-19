@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function ForgotPIN() {
   const [accountNumber, setAccountNumber] = useState("");
@@ -108,6 +109,7 @@ export default function ForgotPIN() {
 
   return (
     <main className="auth-page">
+      <ThemeToggle className="auth-theme-toggle" />
       <section className="auth-card">
         <div className="brand-mark">B</div>
 

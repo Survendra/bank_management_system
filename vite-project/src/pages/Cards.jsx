@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import { useToast } from "../components/Toast";
+import { useToast } from "../components/useToast";
 import ConfirmModal from "../components/ConfirmModal";
+
+const initialPaymentForm = {
+  merchant: "",
+  category: "Shopping",
+  amount: "",
+  pin: "",
+};
 
 export default function Cards() {
   const [cards, setCards] = useState([]);
@@ -18,12 +25,7 @@ export default function Cards() {
 
   const [paymentCard, setPaymentCard] = useState(null);
 
-  const [paymentForm, setPaymentForm] = useState({
-    merchant: "",
-    category: "Shopping",
-    amount: "",
-    pin: "",
-  });
+  const [paymentForm, setPaymentForm] = useState(initialPaymentForm);
 
   const [paying, setPaying] = useState(false);
 
@@ -65,9 +67,40 @@ export default function Cards() {
     setActiveActivityCardId(null);
   }
 
+  function closePaymentForm() {
+    setPaymentCard(null);
+    setPaymentForm({ ...initialPaymentForm });
+  }
+
   useEffect(() => {
-    loadCards();
-  }, []);
+    let active = true;
+
+    async function load() {
+      try {
+        const response = await api.get("/cards");
+        if (active) {
+          setCards(response.data.cards || []);
+          setVirtualCards(response.data.virtual_cards || []);
+        }
+      } catch (error) {
+        if (active) {
+          showToast(
+            error.response?.data?.message || "Could not load your cards.",
+            "error"
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, [showToast]);
 
   async function handleIssueCard() {
     setIssuing(true);
@@ -339,14 +372,7 @@ export default function Cards() {
         paymentForm
       );
 
-      setPaymentForm({
-        merchant: "",
-        category: "Shopping",
-        amount: "",
-        pin: "",
-      });
-
-      setPaymentCard(null);
+      closePaymentForm();
 
       closeActivity();
 
@@ -663,6 +689,7 @@ export default function Cards() {
                         className="secondary-button"
                         onClick={() => {
                           closeActivity();
+                          closePaymentForm();
 
                           setEditingLimit(
                             card.id
@@ -679,11 +706,8 @@ export default function Cards() {
                       <button
                         className="secondary-button"
                         onClick={() => {
+                          closePaymentForm();
                           setEditingLimit(
-                            null
-                          );
-
-                          setPaymentCard(
                             null
                           );
 
@@ -703,7 +727,7 @@ export default function Cards() {
                         className="secondary-button"
                         onClick={() => {
                           closeActivity();
-
+                          closePaymentForm();
                           setPaymentCard(
                             card
                           );
@@ -716,6 +740,7 @@ export default function Cards() {
                         className="danger-outline-button"
                         onClick={() => {
                           closeActivity();
+                          closePaymentForm();
 
                           setConfirmAction({
                             type: "block",
@@ -738,6 +763,7 @@ export default function Cards() {
                     className="secondary-button"
                     onClick={() => {
                       closeActivity();
+                      closePaymentForm();
 
                       setConfirmAction({
                         type: "replace",
@@ -1342,11 +1368,7 @@ export default function Cards() {
               <button
                 className="secondary-button"
                 type="button"
-                onClick={() => {
-                  setPaymentCard(
-                    null
-                  );
-                }}
+                onClick={closePaymentForm}
                 disabled={paying}
               >
                 Cancel

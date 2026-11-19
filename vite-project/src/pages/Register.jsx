@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function Register() {
   const [form, setForm] = useState({ name: "", age: "", pin: "", confirmPin: "" });
@@ -41,6 +42,7 @@ export default function Register() {
 
   return (
     <main className="auth-page">
+      <ThemeToggle className="auth-theme-toggle" />
       <section className="auth-card">
         <div className="brand-mark">B</div>
         <p className="eyebrow">GET STARTED</p>

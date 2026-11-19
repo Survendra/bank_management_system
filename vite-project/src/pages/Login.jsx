@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function Login() {
   const [accountNumber, setAccountNumber] = useState("");
@@ -28,6 +29,7 @@ export default function Login() {
         return;
       }
 
+      sessionStorage.removeItem("staffAuthenticated");
       sessionStorage.setItem(
         "bankAccount",
         JSON.stringify(response.data.account)
@@ -54,6 +56,7 @@ export default function Login() {
         code: twoFactorCode,
       });
 
+      sessionStorage.removeItem("staffAuthenticated");
       sessionStorage.setItem(
         "bankAccount",
         JSON.stringify(response.data.account)
@@ -78,6 +81,7 @@ export default function Login() {
 
   return (
     <main className="auth-page">
+      <ThemeToggle className="auth-theme-toggle" />
       <section className="auth-card">
         <div className="brand-mark">B</div>
 
@@ -144,6 +148,9 @@ export default function Login() {
                 <Link to="/register">
                   Create an account
                 </Link>
+              </p>
+              <p>
+                <Link to="/staff">Staff sign in</Link>
               </p>
             </div>
           </>

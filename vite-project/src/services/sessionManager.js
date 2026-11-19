@@ -5,6 +5,7 @@ const WARNING_TIME = 2 * 60 * 1000;
 
 let inactivityTimer = null;
 let warningTimer = null;
+let activeListeners = [];
 
 const activityEvents = [
   "mousemove",
@@ -19,11 +20,8 @@ export function startSessionManager({
   onWarning,
   onLogout,
 }) {
-  let warningShown = false;
-
+  stopSessionManager();
   function resetTimers() {
-    warningShown = false;
-
     if (inactivityTimer) {
       clearTimeout(inactivityTimer);
     }
@@ -33,8 +31,6 @@ export function startSessionManager({
     }
 
     warningTimer = setTimeout(() => {
-      warningShown = true;
-
       if (onWarning) {
         onWarning();
       }
@@ -61,10 +57,9 @@ export function startSessionManager({
     }
   }
 
-  activityEvents.forEach((event) => {
-    window.addEventListener(event, resetTimers, {
-      passive: true,
-    });
+  activeListeners = activityEvents.map((event) => {
+    window.addEventListener(event, resetTimers, { passive: true });
+    return [event, resetTimers];
   });
 
   resetTimers();
@@ -84,4 +79,9 @@ export function stopSessionManager() {
     clearTimeout(warningTimer);
     warningTimer = null;
   }
+
+  activeListeners.forEach(([event, listener]) => {
+    window.removeEventListener(event, listener);
+  });
+  activeListeners = [];
 }

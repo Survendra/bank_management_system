@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
-import { useToast } from "../components/Toast";
+import { useToast } from "../components/useToast";
 import ConfirmModal from "../components/ConfirmModal";
 import { getBeneficiaries, transferFunds } from "../services/api";
 import { jsPDF } from "jspdf";
+
+const initialForm = {
+  beneficiary_id: "",
+  amount: "",
+  pin: "",
+};
 
 export default function FundTransfer() {
   const [beneficiaries, setBeneficiaries] = useState([]);
@@ -13,11 +19,7 @@ export default function FundTransfer() {
 
   const { showToast } = useToast();
 
-  const [form, setForm] = useState({
-    beneficiary_id: "",
-    amount: "",
-    pin: "",
-  });
+  const [form, setForm] = useState(initialForm);
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -94,6 +96,10 @@ export default function FundTransfer() {
   function cancelTransfer() {
     if (!transferring) {
       setShowConfirmModal(false);
+      setForm({ ...initialForm });
+      setMessage("");
+      setError("");
+      setTransferDetails(null);
     }
   }
 
@@ -118,11 +124,7 @@ export default function FundTransfer() {
 
       setShowConfirmModal(false);
 
-      setForm({
-        beneficiary_id: "",
-        amount: "",
-        pin: "",
-      });
+      setForm({ ...initialForm });
     } catch (err) {
       const errorMessage =
         err.response?.data?.message ||

@@ -1,6 +1,3 @@
-import json
-import os
-import tempfile
 import time
 import unittest
 from unittest.mock import patch
@@ -12,56 +9,30 @@ from app import app as flask_app
 ACCOUNT_NUMBER = "66243543507"
 
 
+def make_account(locked_until, failed_attempts):
+    return {
+        "name": "Test User",
+        "age": 22,
+        "email": "",
+        "account_number": ACCOUNT_NUMBER,
+        "balance": "100",
+        "failed_attempts": failed_attempts,
+        "locked_until": locked_until,
+        "pin_salt": "a" * 32,
+        "pin_hash": "b" * 64,
+    }
+
+
 class LoginLockoutTests(unittest.TestCase):
-    def test_expired_lock_with_stale_attempts_does_not_reject_account(self):
-        account_data = {
-            "name": "Test User",
-            "age": 22,
-            "account_number": ACCOUNT_NUMBER,
-            "balance": "100",
-            "failed_attempts": 6,
-            "locked_until": time.time() - 1,
-            "pin_salt": "a" * 32,
-            "pin_hash": "b" * 64,
-        }
-
-        with tempfile.TemporaryDirectory() as directory:
-            data_file = os.path.join(directory, "bank_data.json")
-            with open(data_file, "w", encoding="utf-8") as file:
-                json.dump({"accounts": {ACCOUNT_NUMBER: account_data}}, file)
-
-            with (
-                patch.object(bank_service, "ACCOUNT_FILE", data_file),
-                patch.dict(bank_service.accounts, {}, clear=True),
-                patch.object(bank_service, "storage_ready", False),
-            ):
-                bank_service.load_data()
-
-                self.assertIn(ACCOUNT_NUMBER, bank_service.accounts)
-                self.assertEqual(
-                    bank_service.accounts[ACCOUNT_NUMBER]["failed_attempts"],
-                    0,
-                )
-                self.assertEqual(
-                    bank_service.accounts[ACCOUNT_NUMBER]["locked_until"],
-                    0,
-                )
-
-    def test_login_starts_new_attempt_count_after_lock_expires(self):
-        account = {
-            "name": "Test User",
-            "age": 22,
-            "email": "",
-            "account_number": ACCOUNT_NUMBER,
-            "balance": 100,
-            "failed_attempts": 6,
-            "locked_until": time.time() - 1,
-            "pin_salt": "a" * 32,
-            "pin_hash": "b" * 64,
-        }
+    def test_expired_lock_starts_a_new_attempt_count(self):
+        account = make_account(time.time() - 1, 6)
 
         with (
-            patch.dict(bank_service.accounts, {ACCOUNT_NUMBER: account}, clear=True),
+            patch.object(
+                bank_service,
+                "refresh_account",
+                return_value=account,
+            ),
             patch.object(bank_service, "save_data", return_value=True),
             patch.object(bank_service, "verify_pin", return_value=False),
         ):
@@ -73,6 +44,28 @@ class LoginLockoutTests(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(account["failed_attempts"], 1)
         self.assertEqual(account["locked_until"], 0)
+
+    def test_active_lock_rejects_login_without_another_pin_attempt(self):
+        account = make_account(time.time() + 60, 3)
+
+        with (
+            patch.object(
+                bank_service,
+                "refresh_account",
+                return_value=account,
+            ),
+            patch.object(bank_service, "save_data") as save_data,
+            patch.object(bank_service, "verify_pin") as verify_pin,
+        ):
+            response = flask_app.test_client().post(
+                "/api/login",
+                json={"account_number": ACCOUNT_NUMBER, "pin": "1234"},
+            )
+
+        self.assertEqual(response.status_code, 423)
+        self.assertEqual(account["failed_attempts"], 3)
+        save_data.assert_not_called()
+        verify_pin.assert_not_called()
 
 
 if __name__ == "__main__":

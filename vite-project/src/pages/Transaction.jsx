@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
-import { useToast } from "../components/Toast";
+import { useToast } from "../components/useToast";
 
 export default function Transaction({ type }) {
   const isDeposit = type === "deposit";

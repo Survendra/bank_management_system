@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../services/api";
-import { useToast } from "../components/Toast";
+import { useToast } from "../components/useToast";
 
 export default function ProfileSettings() {
   const [account, setAccount] = useState(null);
@@ -16,12 +16,14 @@ export default function ProfileSettings() {
   const [twoFASetup, setTwoFASetup] = useState(null);
   const [twoFACode, setTwoFACode] = useState("");
   const [twoFALoading, setTwoFALoading] = useState(false);
+  const [alertPreferences, setAlertPreferences] = useState(null);
+  const [alertSaving, setAlertSaving] = useState(false);
+  const [activeSessions, setActiveSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
 
   const { showToast } = useToast();
 
-  async function loadSecurityActivity() {
-    setSecurityLoading(true);
-
+  const loadSecurityActivity = useCallback(async () => {
     try {
       const response = await api.get("/security/activity");
 
@@ -37,9 +39,9 @@ export default function ProfileSettings() {
     } finally {
       setSecurityLoading(false);
     }
-  }
+  }, [showToast]);
 
-  async function loadTwoFAStatus() {
+  const loadTwoFAStatus = useCallback(async () => {
   try {
     const response = await api.get("/2fa/status");
     setTwoFAEnabled(response.data.enabled);
@@ -50,7 +52,7 @@ export default function ProfileSettings() {
       "error"
     );
   }
-}
+  }, [showToast]);
 
 async function startTwoFASetup() {
   setTwoFALoading(true);
@@ -140,6 +142,63 @@ async function disableTwoFA() {
   }
 }
 
+const loadAccountControls = useCallback(async () => {
+  try {
+    const [alertsResponse, sessionsResponse] = await Promise.all([
+      api.get("/alerts"),
+      api.get("/sessions"),
+    ]);
+    setAlertPreferences(alertsResponse.data.preferences);
+    setActiveSessions(sessionsResponse.data.sessions || []);
+  } catch (error) {
+    showToast(
+      error.response?.data?.message ||
+        "Could not load alerts or active devices.",
+      "error"
+    );
+  } finally {
+    setSessionsLoading(false);
+  }
+}, [showToast]);
+
+async function saveAccountAlerts() {
+  if (!alertPreferences) {
+    return;
+  }
+  setAlertSaving(true);
+  try {
+    const response = await api.put("/alerts", alertPreferences);
+    setAlertPreferences(response.data.preferences);
+    showToast("Account alert preferences saved.", "success");
+  } catch (error) {
+    showToast(
+      error.response?.data?.message || "Could not save alert preferences.",
+      "error"
+    );
+  } finally {
+    setAlertSaving(false);
+  }
+}
+
+async function revokeDevice(deviceSession) {
+  try {
+    await api.delete(`/sessions/${deviceSession.id}`);
+    setActiveSessions((current) =>
+      current.filter((item) => item.id !== deviceSession.id)
+    );
+    showToast("Device session revoked.", "success");
+    if (deviceSession.current) {
+      sessionStorage.removeItem("bankAccount");
+      window.location.replace("/");
+    }
+  } catch (error) {
+    showToast(
+      error.response?.data?.message || "Could not revoke this device.",
+      "error"
+    );
+  }
+}
+
   useEffect(() => {
     async function loadProfile() {
       try {
@@ -167,13 +226,6 @@ async function disableTwoFA() {
 
     loadProfile();
   }, [showToast]);
-
-  useEffect(() => {
-    if (activeSection === "security") {
-      loadSecurityActivity();
-      loadTwoFAStatus();
-    }
-  }, [activeSection]);
 
   async function handleEmailUpdate(event) {
     event.preventDefault();
@@ -329,9 +381,14 @@ async function disableTwoFA() {
                   ? "profile-menu-item active"
                   : "profile-menu-item"
               }
-              onClick={() =>
-                setActiveSection(item.id)
-              }
+              onClick={() => {
+                setActiveSection(item.id);
+                if (item.id === "security") {
+                  loadSecurityActivity();
+                  loadTwoFAStatus();
+                  loadAccountControls();
+                }
+              }}
             >
               <span>
                 {item.id === "personal" && "◉"}
@@ -930,6 +987,129 @@ async function disableTwoFA() {
                 </button>
               </div>
             )}
+
+              <section className="account-control-section">
+                <div className="profile-section-heading">
+                  <div>
+                    <h3>Custom account alerts</h3>
+                    <p>Choose which account events should create an in-app notification.</p>
+                  </div>
+                </div>
+                {alertPreferences && (
+                  <div className="alert-preferences">
+                    <label className="feature-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={alertPreferences.transaction_alerts_enabled}
+                        onChange={(event) =>
+                          setAlertPreferences({
+                            ...alertPreferences,
+                            transaction_alerts_enabled: event.target.checked,
+                          })
+                        }
+                      />
+                      Large transaction alerts
+                    </label>
+                    <label className="feature-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={alertPreferences.transfer_alerts_enabled}
+                        onChange={(event) =>
+                          setAlertPreferences({
+                            ...alertPreferences,
+                            transfer_alerts_enabled: event.target.checked,
+                          })
+                        }
+                      />
+                      Transfer alerts
+                    </label>
+                    <label className="feature-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={alertPreferences.sign_in_alerts_enabled}
+                        onChange={(event) =>
+                          setAlertPreferences({
+                            ...alertPreferences,
+                            sign_in_alerts_enabled: event.target.checked,
+                          })
+                        }
+                      />
+                      New sign-in alerts
+                    </label>
+                    <label>
+                      Large transaction threshold
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={alertPreferences.large_transaction_threshold || ""}
+                        onChange={(event) =>
+                          setAlertPreferences({
+                            ...alertPreferences,
+                            large_transaction_threshold: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Low-balance threshold (leave blank to disable)
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={alertPreferences.low_balance_threshold || ""}
+                        onChange={(event) =>
+                          setAlertPreferences({
+                            ...alertPreferences,
+                            low_balance_threshold: event.target.value || null,
+                          })
+                        }
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={saveAccountAlerts}
+                      disabled={alertSaving}
+                    >
+                      {alertSaving ? "Saving..." : "Save alert settings"}
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              <section className="account-control-section">
+                <div className="profile-section-heading">
+                  <div>
+                    <h3>Active devices and sessions</h3>
+                    <p>Revoke access to a device you no longer use.</p>
+                  </div>
+                </div>
+                {sessionsLoading ? (
+                  <p className="muted">Loading sessions...</p>
+                ) : activeSessions.length === 0 ? (
+                  <p className="muted">No active device sessions found.</p>
+                ) : (
+                  <div className="feature-record-list">
+                    {activeSessions.map((item) => (
+                      <article className="feature-record" key={item.id}>
+                        <div>
+                          <strong>{item.device} · {item.browser}</strong>
+                          <small>Last active {new Date(item.last_seen_at).toLocaleString()}</small>
+                          {item.current && <small>This device</small>}
+                        </div>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={() => revokeDevice(item)}
+                        >
+                          Revoke
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
 
               {/* Recent login activity */}
 

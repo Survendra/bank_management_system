@@ -7,6 +7,7 @@ import tempfile
 import time
 import hmac
 import hashlib
+import copy
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -32,10 +33,20 @@ beneficiaries_collection = mongo_db["beneficiaries"]
 cards_collection = mongo_db["cards"]
 security_events_collection = mongo_db["security_events"]
 notifications_collection = mongo_db["notifications"]
+scheduled_transfers_collection = mongo_db["scheduled_transfers"]
+disputes_collection = mongo_db["disputes"]
+sessions_collection = mongo_db["sessions"]
+audit_log_collection = mongo_db["audit_log"]
 
 accounts_collection.create_index(
     [("account_number", 1)],
     unique=True
+)
+scheduled_transfers_collection.create_index(
+    [("status", 1), ("next_run_at", 1), ("claim_until", 1)]
+)
+disputes_collection.create_index(
+    [("account_number", 1), ("created_at", -1)]
 )
 
 
@@ -45,6 +56,12 @@ PIN_ITERATIONS = 600000
 
 accounts = {}
 storage_ready = False
+_account_versions = {}
+_persisted_snapshots = {}
+
+
+class ConcurrentAccountWriteError(RuntimeError):
+    pass
 
 
 def is_valid_name(name):
@@ -111,51 +128,190 @@ def parse_amount(raw):
     return None
 
 
+def _serialize_account(account_number, account):
+    document = copy.deepcopy(account)
+    document["account_number"] = account_number
+    document.pop("_id", None)
+    document.pop("_version", None)
+
+    if isinstance(document.get("balance"), Decimal):
+        document["balance"] = str(document["balance"])
+
+    return document
+
+
+def _mark_accounts_persisted(account_numbers):
+    for account_number in account_numbers:
+        _account_versions[account_number] = (
+            _account_versions.get(account_number, 0) + 1
+        )
+        _persisted_snapshots[account_number] = _serialize_account(
+            account_number,
+            accounts[account_number],
+        )
+
+
+def _write_account(account_number, session=None):
+    account = accounts[account_number]
+    version = _account_versions.get(account_number, 0)
+    document = _serialize_account(account_number, account)
+    document["_version"] = version + 1
+
+    query = {"account_number": account_number}
+    if version:
+        query["_version"] = version
+    else:
+        query["_version"] = {"$exists": False}
+
+    result = accounts_collection.update_one(
+        query,
+        {"$set": document},
+        upsert=version == 0,
+        session=session,
+    )
+
+    if version and result.matched_count != 1:
+        raise ConcurrentAccountWriteError(
+            f"Account {account_number} changed in another process."
+        )
+    if not version and not (result.matched_count or result.upserted_id):
+        raise ConcurrentAccountWriteError(
+            f"Account {account_number} was created in another process."
+        )
+
+
 def save_data():
     global storage_ready
 
     try:
-        for account_number, account in accounts.items():
-            document = dict(account)
+        changed_accounts = [
+            account_number
+            for account_number, account in accounts.items()
+            if _persisted_snapshots.get(account_number)
+            != _serialize_account(account_number, account)
+        ]
 
-            # MongoDB should store the account number as a field
-            document["account_number"] = account_number
+        if not changed_accounts:
+            storage_ready = True
+            return True
 
-            # Remove any MongoDB-generated ID if present
-            document.pop("_id", None)
-
-            # Store Decimal balance safely as a string
-            if isinstance(document.get("balance"), Decimal):
-                document["balance"] = str(document["balance"])
-
-            accounts_collection.update_one(
-                {"account_number": account_number},
-                {"$set": document},
-                upsert=True,
+        if len(changed_accounts) != 1:
+            raise ConcurrentAccountWriteError(
+                "Multiple account changes require save_accounts_atomic()."
             )
 
+        account_number = changed_accounts[0]
+        _write_account(account_number)
+        _mark_accounts_persisted([account_number])
+
         storage_ready = True
-
-        print(
-            f"Saved {len(accounts)} accounts to MongoDB."
-        )
-
         return True
 
     except Exception as exc:
         storage_ready = False
+        print(f"MongoDB save error: {type(exc).__name__}: {exc}")
+        return False
 
-        print(
-            f"MongoDB save error: "
-            f"{type(exc).__name__}: {exc}"
-        )
-        raise
+
+def save_accounts_atomic(account_numbers, session=None):
+    account_numbers = list(dict.fromkeys(account_numbers))
+    if not account_numbers or any(
+        account_number not in accounts
+        for account_number in account_numbers
+    ):
+        raise ValueError("Every account must be loaded before saving.")
+
+    def write_all(mongo_session):
+        for account_number in account_numbers:
+            _write_account(account_number, session=mongo_session)
+
+    if session is None:
+        with mongo_client.start_session() as mongo_session:
+            with mongo_session.start_transaction():
+                write_all(mongo_session)
+        _mark_accounts_persisted(account_numbers)
+        return
+
+    write_all(session)
+
+
+def mark_accounts_persisted(account_numbers):
+    _mark_accounts_persisted(account_numbers)
+
+
+def refresh_account(account_number):
+    item = accounts_collection.find_one(
+        {"account_number": account_number}
+    )
+    if item is None:
+        accounts.pop(account_number, None)
+        _account_versions.pop(account_number, None)
+        _persisted_snapshots.pop(account_number, None)
+        return None
+
+    record = dict(item)
+    record.pop("_id", None)
+    version = record.pop("_version", 0)
+    record["account_number"] = account_number
+    record["balance"] = Decimal(str(record.get("balance", "0")))
+
+    for field in [
+        "transactions",
+        "beneficiaries",
+        "notifications",
+        "security_activity",
+        "cards",
+        "virtual_cards",
+        "savings_goals",
+    ]:
+        if not isinstance(record.get(field), list):
+            record[field] = []
+
+    if not isinstance(record.get("alert_preferences"), dict):
+        record["alert_preferences"] = default_alert_preferences()
+
+    if not isinstance(record.get("budgets"), dict):
+        record["budgets"] = {}
+
+    for transaction in record["transactions"]:
+        transaction.setdefault("status", "COMPLETED")
+
+    accounts[account_number] = record
+    _account_versions[account_number] = int(version or 0)
+    _persisted_snapshots[account_number] = _serialize_account(
+        account_number,
+        record,
+    )
+    return record
+
+
+def default_alert_preferences():
+    return {
+        "low_balance_threshold": None,
+        "large_transaction_threshold": "1000.00",
+        "transaction_alerts_enabled": True,
+        "transfer_alerts_enabled": True,
+        "sign_in_alerts_enabled": True,
+    }
+
+
+def available_balance(account):
+    reserved = sum(
+        (
+            Decimal(str(goal.get("saved_amount", "0")))
+            for goal in account.get("savings_goals", [])
+        ),
+        Decimal("0.00"),
+    )
+    return max(Decimal("0.00"), account["balance"] - reserved)
 
 
 def load_data():
-    global accounts, storage_ready
+    global accounts, storage_ready, _account_versions, _persisted_snapshots
 
     accounts = {}
+    _account_versions = {}
+    _persisted_snapshots = {}
 
     try:
         valid = {}
@@ -179,6 +335,7 @@ def load_data():
 
             record = dict(item)
             record.pop("_id", None)
+            version = record.pop("_version", 0)
 
             record["account_number"] = account_number
 
@@ -233,9 +390,19 @@ def load_data():
                     "security_activity",
                     "cards",
                     "virtual_cards",
+                    "savings_goals",
                 ]:
                     if not isinstance(record.get(field), list):
                         record[field] = []
+
+                if not isinstance(record.get("alert_preferences"), dict):
+                    record["alert_preferences"] = default_alert_preferences()
+
+                if not isinstance(record.get("budgets"), dict):
+                    record["budgets"] = {}
+
+                for transaction in record["transactions"]:
+                    transaction.setdefault("status", "COMPLETED")
 
                 if not isinstance(
                     record.get("two_factor"),
@@ -291,6 +458,11 @@ def load_data():
                         continue
 
                 valid[account_number] = record
+                _account_versions[account_number] = int(version or 0)
+                _persisted_snapshots[account_number] = _serialize_account(
+                    account_number,
+                    record,
+                )
 
             except (
                 TypeError,
@@ -306,10 +478,7 @@ def load_data():
         accounts = valid
         storage_ready = True
 
-        print(
-            "Loaded accounts from MongoDB:",
-            list(accounts.keys()),
-        )
+        print(f"Loaded {len(accounts)} accounts from MongoDB.")
 
     except Exception as exc:
         print(
@@ -317,6 +486,8 @@ def load_data():
             f"{type(exc).__name__}: {exc}"
         )
         accounts = {}
+        _account_versions = {}
+        _persisted_snapshots = {}
         storage_ready = False
 
 

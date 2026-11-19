@@ -56,6 +56,12 @@ class TransactionAmountLimitTests(unittest.TestCase):
             return_value=True,
         )
         self.save_data = self.save_data_patch.start()
+        self.atomic_save_patch = patch.object(
+            bank_service,
+            "save_accounts_atomic",
+            return_value=None,
+        )
+        self.atomic_save = self.atomic_save_patch.start()
         self.verify_pin_patch = patch.object(
             bank_service,
             "verify_pin",
@@ -71,6 +77,7 @@ class TransactionAmountLimitTests(unittest.TestCase):
 
     def tearDown(self):
         self.verify_pin_patch.stop()
+        self.atomic_save_patch.stop()
         self.save_data_patch.stop()
         self.accounts_patch.stop()
 
@@ -101,6 +108,7 @@ class TransactionAmountLimitTests(unittest.TestCase):
         self.assertEqual(self.account["balance"], Decimal("6000000000.00"))
         self.assertEqual(self.recipient["balance"], Decimal("0.00"))
         self.save_data.assert_not_called()
+        self.atomic_save.assert_not_called()
 
     def test_amount_of_500_crore_is_accepted_for_all_transaction_routes(self):
         requests = (
@@ -125,11 +133,17 @@ class TransactionAmountLimitTests(unittest.TestCase):
                 self.recipient["transactions"] = []
                 self.recipient["notifications"] = []
                 self.save_data.reset_mock()
+                self.atomic_save.reset_mock()
 
                 response = self.client.post(endpoint, json=payload)
 
                 self.assertEqual(response.status_code, 200)
-                self.save_data.assert_called_once()
+                if endpoint == "/api/transfer":
+                    self.atomic_save.assert_called_once_with(
+                        [ACCOUNT_NUMBER, RECIPIENT_NUMBER]
+                    )
+                else:
+                    self.save_data.assert_called_once()
 
 
 if __name__ == "__main__":

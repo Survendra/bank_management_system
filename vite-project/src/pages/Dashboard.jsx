@@ -337,6 +337,20 @@ export default function Dashboard() {
 
           <b>→</b>
         </Link>
+
+        <Link to="/scheduled-transfers" className="action-card">
+          <span className="action-symbol details-symbol">◷</span>
+          <strong>Scheduled transfers</strong>
+          <span>Plan upcoming payments</span>
+          <b>→</b>
+        </Link>
+
+        <Link to="/insights" className="action-card">
+          <span className="action-symbol beneficiary-symbol">◌</span>
+          <strong>Spending &amp; savings</strong>
+          <span>Track categories and goals</span>
+          <b>→</b>
+        </Link>
       </div>
 
       <div className="section-title">
