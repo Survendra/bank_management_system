@@ -1,0 +1,41 @@
+version: "1"
+
+envVarGroups:
+  - name: bluebank-runtime
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: BANK_STAFF_USERS
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: SESSION_COOKIE_SAMESITE
+        value: Lax
+      - key: FLASK_DEBUG
+        value: "false"
+      - key: SCHEDULED_TRANSFER_POLL_SECONDS
+        value: "15"
+
+services:
+  - type: web
+    name: bluebank-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
+    envVarGroups:
+      - name: bluebank-runtime
+
+  - type: worker
+    name: bluebank-scheduled-transfers
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scheduled_transfer_worker.py
+    envVarGroups:
+      - name: bluebank-runtime

@@ -40,15 +40,26 @@ app.config.update(
         "change-this-development-secret"
     ),
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_SAMESITE=os.environ.get("SESSION_COOKIE_SAMESITE", "Lax"),
+    SESSION_COOKIE_SECURE=os.environ.get(
+        "SESSION_COOKIE_SECURE",
+        "false",
+    ).strip().casefold() in {"1", "true", "yes"},
     PERMANENT_SESSION_LIFETIME=8 * 60 * 60,
 )
 
+frontend_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.environ.get(
+        "FRONTEND_ORIGINS",
+        "http://localhost:5173",
+    ).split(",")
+    if origin.strip()
+]
 CORS(
     app,
     supports_credentials=True,
-    origins=["http://localhost:5173"],
+    origins=frontend_origins,
 )
 
 bank.load_data()
@@ -5138,9 +5149,10 @@ if __name__ == "__main__":
     scheduled_worker = start_scheduled_transfer_worker()
     try:
         app.run(
-            host="127.0.0.1",
-            port=5000,
-            debug=True
+            host="0.0.0.0",
+            port=int(os.environ.get("PORT", "5000")),
+            debug=os.environ.get("FLASK_DEBUG", "").strip().casefold()
+            in {"1", "true", "yes"},
         )
     finally:
         if scheduled_worker is not None:
