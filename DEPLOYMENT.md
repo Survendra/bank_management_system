@@ -25,8 +25,9 @@ or compatible cluster because several operations require transactions.
    - `MONGO_URI` to the Atlas connection URI.
    - `BANK_STAFF_USERS` to a JSON array with at least one admin username,
      Werkzeug password hash, and `admin` role.
-   - `FRONTEND_ORIGINS` to the exact production Vercel origin, for example
-     `https://your-project.vercel.app` (no trailing slash).
+   - `FRONTEND_ORIGINS` temporarily to `https://your-project.vercel.app`.
+     Replace it with the exact production Vercel origin after creating the
+     frontend (no trailing slash).
 3. Render generates `FLASK_SECRET_KEY`. Keep it private.
 4. Wait for the API health check at `/api/health` and the scheduled-transfer
    worker to start.
@@ -47,9 +48,11 @@ Never commit connection strings, hashes, or secret keys.
 1. Import the same GitHub repository into Vercel.
 2. Set the project **Root Directory** to `vite-project`, framework to Vite,
    build command to `npm run build`, and output directory to `dist`.
-3. Deploy the frontend and copy its production origin into Render's
-   `FRONTEND_ORIGINS` setting.
-4. The Vercel rewrites proxy API, Swagger, and OpenAPI requests through the
+3. If Render assigned a different API URL, replace the hostname in
+   `vite-project/vercel.json` with the actual Render URL.
+4. Deploy the frontend, then replace the temporary `FRONTEND_ORIGINS` value
+   in Render with the exact production Vercel origin and redeploy the API.
+5. The Vercel rewrites proxy API, Swagger, and OpenAPI requests through the
    frontend origin so browser session cookies remain first-party.
 
 The rewrite destination in `vite-project/vercel.json` assumes the Render API
